@@ -14,9 +14,8 @@ class Individual:
     LENGTH, WIDTH - parametry obrazka
     N             - liczba plam  
     """
-    # LENGTH, WIDTH = 720, 483   # mona lisa 
-    LENGTH, WIDTH = 480, 405   # girlwithapearl
-    N             = 10
+    # LENGTH, WIDTH = 720, 483      # Mona Lisa
+    LENGTH, WIDTH = 480, 405        # Girl with a pearl
 
     """
     splash_parameters - tablica z parametrami kolejnych plam (kolorem, rangą, położeniem)
@@ -24,15 +23,22 @@ class Individual:
     def __init__(self, splash_parameters=[]):
         self.splash_parameters = splash_parameters
         self.objective_value = None 
-        self.pixels_array = None 
+        self.pixels_array = None
+        self.percentage_diff = 0
+        self.N = 6
+        self.current_largest_rank = 1
 
-    def generate_random_inidividual(self):
-        splash_list = [Splash() for i in range(Individual.N)]
+    def generate_random_inidividual(self, n=6):
+        splash_list = [Splash() for i in range(self.N)]
         for splash in splash_list:
-            splash.random_splash(Splash.MAX_RANK, Individual.LENGTH, Individual.WIDTH)
+            splash.random_splash(Individual.LENGTH, Individual.WIDTH)
 
         self.splash_parameters = splash_list
+        self.splash_parameters = splash_list
         self.pixels_array = self.convert_to_pixels_array()
+        self.percentage_diff = 0
+        self.N = n
+
 
     """
     zwraca tablice z wartością koloru w kazdym pixelu obrazka 
@@ -44,18 +50,18 @@ class Individual:
                     (pixel[1] < 0 or Individual.WIDTH <= pixel[1]))
          
         def outside_of_splash(pixel, x, y, r):
-            return (pixel[0]-x)**2 + (pixel[1]-y)**2 > r**2
+            return (pixel[0] - x)**2 + (pixel[1] - y)**2 > r**2
         
         pixels_array = np.zeros((Individual.LENGTH, Individual.WIDTH, 3), dtype=np.uint64)
         pixels_array_ranks = np.zeros((Individual.LENGTH, Individual.WIDTH, 1))
  
         for splash in self.splash_parameters:
-            x, y = splash.x, splash.y 
+            x, y = splash.x, splash.y
 
-            for t in range(-splash.r,splash.r+1):
-                for s in range(-splash.r,splash.r+1):
+            for t in range(-splash.r, splash.r + 1):
+                for s in range(-splash.r, splash.r + 1):
 
-                    pixel = (int(x+t), int(y+s))
+                    pixel = (int(x + t), int(y + s))
                     if outside_of_frame(pixel) or outside_of_splash(pixel, x, y, splash.r):
                         continue
 
@@ -65,8 +71,18 @@ class Individual:
         return pixels_array
     
     """
-    wyświetla obrazek zakodowany w danym osobnuiku za pomocą plt.imshow()
+    wyświetla obrazek zakodowany w danym osobniku za pomocą plt.imshow()
     """
     def show_image(self):
         plt.imshow(self.pixels_array)
+
+    def add_splash(self):
+        self.N += 1
+        self.current_largest_rank += 1
+        splash = Splash(color=Splash.WHITE, rank=self.current_largest_rank)
+        splash.random_splash(self.LENGTH, self.WIDTH)
+        self.splash_parameters.append(splash)
+        self.pixels_array = self.convert_to_pixels_array()
+
+
     
