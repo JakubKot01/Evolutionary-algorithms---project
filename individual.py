@@ -25,11 +25,21 @@ class Individual:
         self.objective_value = None 
         self.pixels_array = None
         self.percentage_diff = 0
-        self.N = 6
+        self.N = 4
         self.current_largest_rank = 1
+        self.current_min_radius = Individual.LENGTH / self.N
+        self.current_max_radius = Individual.LENGTH
 
-    def generate_random_inidividual(self, n=6):
-        splash_list = [Splash() for i in range(self.N)]
+    def generate_random_individual(self, n=4):
+        splash_list = [
+            Splash(color=Splash.WHITE,
+                   rank=1,
+                   min_radius=self.current_min_radius,
+                   max_radius=self.current_max_radius,
+                   min_rank=1,
+                   max_rank=4)
+            for i in range(self.N)]
+
         for splash in splash_list:
             splash.random_splash(Individual.LENGTH, Individual.WIDTH)
 
@@ -77,11 +87,21 @@ class Individual:
         plt.imshow(self.pixels_array)
 
     def add_splash(self):
-        self.N += 1
-        self.current_largest_rank += 1
-        splash = Splash(color=Splash.WHITE, rank=self.current_largest_rank)
-        splash.random_splash(self.LENGTH, self.WIDTH)
-        self.splash_parameters.append(splash)
+        min_rank = self.current_largest_rank + 1
+        max_rank = self.current_largest_rank + 5
+        self.N += 4
+        self.current_min_radius = Individual.LENGTH / self.N
+        for i in range(4):
+            self.current_largest_rank += 1
+            splash = Splash(
+                color=Splash.WHITE,
+                rank=self.current_largest_rank,
+                min_radius=self.current_min_radius,
+                max_radius=self.current_max_radius,
+                min_rank=min_rank,
+                max_rank=max_rank)
+            splash.random_splash(self.LENGTH, self.WIDTH)
+            self.splash_parameters.append(splash)
         self.pixels_array = self.convert_to_pixels_array()
 
 

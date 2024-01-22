@@ -63,7 +63,7 @@ class Utils:
         population.population_size = n
         for _ in range(population.population_size):
             individual = Individual()
-            individual.generate_random_inidividual()
+            individual.generate_random_individual()
             population.append(individual)
         return population
 
@@ -144,66 +144,32 @@ class Utils:
         return child1, child2
 
     def evaluate_individual(self, indiv):
+
         num_of_splashes = indiv.N
 
-        # assert num_of_splashes % 2 == 0, 'liczba plam powinna byc parzysta !'
+        print(f'number of splashes: {num_of_splashes}')
 
-        splashes_x_sorted = [(indiv.splash_parameters[i].x,i) for i in range(num_of_splashes)]
+        parameters = ['color', 'radius', 'coordinates', 'rank']
+        random_parameter = np.random.choice(parameters)
+
+        splashes_x_sorted = [(indiv.splash_parameters[i].x, i) for i in range(num_of_splashes)]
         splashes_x_sorted = sorted(splashes_x_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
 
         random_index = np.random.randint(0, num_of_splashes - 1)
-        random_color = np.random.randint(0, 2)
 
         new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
 
-        def count_distance(x, y, splash):
-            length = abs(splash.y - y)
-            width = abs(splash.x - x)
-            return np.sqrt(length**2 + width**2)
-
-        pixels_of_splash = []
-        target = {'red': 1, 'green': 2, 'blue': 3}
-        red, green, blue = 0, 0, 0
-        for y in range(0, indiv.LENGTH):
-            for x in range(0, indiv.WIDTH):
-                if (count_distance(x, y, new_splash) <= new_splash.r
-                        and indiv.pixels_array[y][x].all() == new_splash.color.all()):
-                    red += abs(int(self.objective_picture[y][x][0]) - int(new_splash.color[0]))
-                    green += abs(int(self.objective_picture[y][x][1]) - int(new_splash.color[1]))
-                    blue += abs(int(self.objective_picture[y][x][2]) - int(new_splash.color[2]))
-
-                    # print(f'red: {red}, green: {green}, blue: {blue}')
-
-        if red == max([red, green, blue]):
-            new_splash.target_color = new_splash.colors_array[target['red']]
-        elif green == max([red, green, blue]):
-            new_splash.target_color = new_splash.colors_array[target['green']]
-        elif blue == max([red, green, blue]):
-            new_splash.target_color = new_splash.colors_array[target['blue']]
-
-        changed_color = 0
-        if new_splash.target_color == 'red':
-            new_splash.color[0] += np.random.randint(-30, 30)
-            print(f'updated red, {new_splash.color[0]}')
-            changed_color = target['red']
-        elif new_splash.target_color == 'green':
-            new_splash.color[1] += np.random.randint(-30, 30)
-            print(f'updated red, {new_splash.color[1]}')
-            changed_color = target['green']
-        elif new_splash.target_color == 'blue':
-            new_splash.color[2] += np.random.randint(-30, 30)
-            print(f'updated red, {new_splash.color[2]}')
-            changed_color = target['blue']
+        if random_parameter == 'color':
+            new_splash.modify_color(Individual.LENGTH, Individual.WIDTH, indiv, self)
+        elif random_parameter == 'radius':
+            new_splash.modify_radius()
+        elif random_parameter == 'rank':
+            new_splash.modify_rank()
         else:
-            new_splash.color[random_color] += np.random.randint(0, 255)
-
-        if new_splash.color[changed_color - 1] > 255:
-            new_splash.color[changed_color - 1] = 255
-        elif new_splash.color[changed_color - 1] < 0:
-            new_splash.color[changed_color - 1] = 0
+            new_splash.modify_coordinates(Individual.LENGTH, Individual.WIDTH)
 
         splashes = list()
-        for i in range(0, num_of_splashes):
+        for i in range(0, num_of_splashes - 1):
             if i != random_index:
                 splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
             else:

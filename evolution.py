@@ -21,7 +21,7 @@ from utils import Utils
 
 class Evolution:
 
-    def __init__(self, problem=None, num_of_generations=100, population_size=2, tournament_prob=0.9,
+    def __init__(self, problem=None, num_of_generations=200, population_size=25, tournament_prob=0.9,
                  cross_over_param=2, mutation_param=5):
         self.utils = Utils('GirlwithaPearl.jpg')
         self.population = None
@@ -64,6 +64,7 @@ class Evolution:
 
             if self.no_difference_counter == 4:
                 self.add_splash(self.population)
+                self.no_difference_counter = 0
 
             parent_index = self.utils.parents_selection(self.population, number_of_parents)
             children_population = self.utils.create_children_population(self.population, parent_index)
