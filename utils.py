@@ -4,66 +4,63 @@ import copy
 from functools import cmp_to_key
 
 import splash
-from imp import reload 
-reload(splash)
+import individual
+import population
 
-import individual 
-from imp import reload 
-reload(individual)
-
-import population 
-from imp import reload 
-reload(population)
-
-from splash import Splash
 from individual import Individual
 from population import Population
+
+from imp import reload
+
+reload(splash)
+reload(individual)
+reload(population)
+
 
 class Utils:
 
     def __init__(self, picture_name, mutation_probability=0.4):
         self.objective_picture = io.imread(picture_name)
-        l, w, t = self.objective_picture.shape
-        self.length, self.width = l, w 
+        print(self.objective_picture.shape)
+        self.length, self.width, t = self.objective_picture.shape
         self.mutation_probability = mutation_probability
     """
     compute RBG distance 
     """
     def objective_function(self, individual):
         result = 0
-        largest_difference = 0
-        target_color = 0
-        number_of_pixels = individual.LENGTH * individual.WIDTH
+        number_of_pixels = individual.WIDTH * individual.LENGTH
         individual.percentage_diff = 0
 
-        for i in range(self.length):
-            for j in range(self.width):
+        for y in range(self.length):
+            for x in range(self.width):
                 pixel_difference = 0
+                # print(f'x = {x}, y = {y}')
                 for c in range(3):
                     
-                    pixel_docelowy = int(self.objective_picture[i][j][c])
-                    pixel_aktualny = int(individual.pixels_array[i][j][c])
+                    pixel_docelowy = int(self.objective_picture[y][x][c])
+                    pixel_aktualny = int(individual.pixels_array[y][x][c])
                     difference = abs(pixel_aktualny - pixel_docelowy)
                     difference = int(difference)
 
-                    # print(difference)
                     pixel_difference += (1 - (difference / 255))
-
-                    # if difference > largest_difference:
-                    #    largest_difference = difference
-                    #    target_color = c
 
                     result += difference**2
                 individual.percentage_diff += pixel_difference / 3
         individual.percentage_diff /= number_of_pixels
         return result
-    
-    def create_initial_population(self, n):
+
+    @staticmethod
+    def create_initial_population(n):
         population = Population()
         population.population_size = n
         for _ in range(population.population_size):
-            individual = Individual()
-            individual.generate_random_individual()
+            individual = Individual(
+                None,
+                1,
+                np.floor(Individual.WIDTH / 4),
+                np.floor(Individual.WIDTH))
+            individual.generate_random_individual(n=1)
             population.append(individual)
         return population
 
@@ -74,7 +71,8 @@ class Utils:
     """
     zwraca indeksy osobników wylosowanych na rodziców metodą ruletki 
     """
-    def parents_selection(self, P, number_of_parents):
+    @staticmethod
+    def parents_selection(P, number_of_parents):
         objective_values = np.array([x.objective_value for x in P.population])
         fitness_values = objective_values.max() - objective_values
         if fitness_values.sum() > 0:
@@ -91,21 +89,14 @@ class Utils:
         children = Population()
         children.population_size = parent_indexes.size
 
-        assert parent_indexes.size % 2 == 0, 'liczba rodziców musi byc parzysta !'
-
-        # for i in range(0, parent_indexes.size-1, 2):
-        #   parent1, parent2 = P.population[i], P.population[i+1]
-        #   child1, child2 = self.crossover(parent1, parent2)
-        #   children.extend([child1, child2])
-
         for i in range(0, parent_indexes.size):
             index = self.parents_selection(P, 1)[0]
             child = self.evaluate_individual(P.population[index])
             children.extend([child])
 
-        for i in range(children.population_size):
-            if np.random.random() < self.mutation_probability:
-                self.mutate(children.population[i])
+        # for i in range(children.population_size):
+        #     if np.random.random() < self.mutation_probability:
+        #         self.mutate(children.population[i])
         
         """
         wylicz tablice pikseli oraz wartość funkcji celu każdego osbonika z populacji dzieci 
@@ -113,35 +104,7 @@ class Utils:
         for i in range(children.population_size):
             children.population[i].pixels_array = children.population[i].convert_to_pixels_array()
             children.population[i].objective_value = self.objective_function(children.population[i])
-        return children 
-
-    """
-    pierwsza połowa plamek od rodzca trafia do drugiego dzieca , a reszta plamek do drugiego dziecka 
-    zwraca 2 osobników z ustalonymi 'splash_parameters' ALE BEZ 'pixels_array' 
-    """
-    def crossover(self, indiv1, indiv2):
-        num_of_splashes = indiv1.N
-
-        assert num_of_splashes%2==0, 'liczba plam powinna byc parzysta !'
-
-        splashes_1_x_sorted = [(indiv1.splash_parameters[i].x,i) for i in range(num_of_splashes)]
-        splashes_1_x_sorted = sorted(splashes_1_x_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
-
-        splashes_2_x_sorted = [(indiv2.splash_parameters[i].x,i) for i in range(num_of_splashes)]
-        splashes_2_x_sorted = sorted(splashes_2_x_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
-
-        splashes1, splashes2 = list(), list()
-        for i in range(int(num_of_splashes/2)):
-            splash2, splash1 = indiv2.splash_parameters[splashes_2_x_sorted[i][1]], indiv1.splash_parameters[splashes_1_x_sorted[i][1]]
-            splashes1.append(copy.deepcopy(splash2))
-            splashes2.append(copy.deepcopy(splash1))
-    
-        for i in range(int(num_of_splashes/2), num_of_splashes):
-            splashes1.append(copy.deepcopy(indiv1.splash_parameters[splashes_1_x_sorted[i][1]]))
-            splashes2.append(copy.deepcopy(indiv2.splash_parameters[splashes_2_x_sorted[i][1]]))
-        
-        child1, child2 = Individual(splashes1), Individual(splashes2)
-        return child1, child2
+        return children
 
     def evaluate_individual(self, indiv):
 
@@ -152,48 +115,90 @@ class Utils:
         parameters = ['color', 'radius', 'coordinates', 'rank']
         random_parameter = np.random.choice(parameters)
 
-        splashes_x_sorted = [(indiv.splash_parameters[i].x, i) for i in range(num_of_splashes)]
+        print(indiv.splash_parameters)
+
+        splashes_x_sorted = []
+        for i in range(num_of_splashes):
+            splashes_x_sorted.append((indiv.splash_parameters[i].x, i))
+
         splashes_x_sorted = sorted(splashes_x_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
 
-        random_index = np.random.randint(0, num_of_splashes - 1)
-
-        new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
+        splashes = list()
 
         if random_parameter == 'color':
-            new_splash.modify_color(Individual.LENGTH, Individual.WIDTH, indiv, self)
+            # for i in range (num_of_splashes):
+            #     new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]])
+            #     new_splash.modify_color(Individual.WIDTH, Individual.LENGTH, indiv, self)
+            #     splashes.append(new_splash)
+
+            random_index = np.random.randint(0, num_of_splashes)
+            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
+            new_splash.modify_color(Individual.WIDTH, Individual.LENGTH, indiv, self)
+
+            for i in range(0, num_of_splashes):
+                if i != random_index:
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                else:
+                    splashes.append(copy.deepcopy(new_splash))
+
         elif random_parameter == 'radius':
+            random_index = np.random.randint(0, num_of_splashes)
+            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
             new_splash.modify_radius()
+
+            for i in range(0, num_of_splashes):
+                if i != random_index:
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                else:
+                    splashes.append(copy.deepcopy(new_splash))
         elif random_parameter == 'rank':
+            random_index = np.random.randint(0, num_of_splashes)
+            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
             new_splash.modify_rank()
+
+            for i in range(0, num_of_splashes):
+                if i != random_index:
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                else:
+                    splashes.append(copy.deepcopy(new_splash))
         else:
-            new_splash.modify_coordinates(Individual.LENGTH, Individual.WIDTH)
+            random_index = np.random.randint(0, num_of_splashes)
+            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
+            new_splash.modify_coordinates(Individual.WIDTH, Individual.LENGTH)
 
-        splashes = list()
-        for i in range(0, num_of_splashes - 1):
-            if i != random_index:
-                splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
-            else:
-                splashes.append(copy.deepcopy(new_splash))
+            for i in range(0, num_of_splashes):
+                if i != random_index:
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                else:
+                    splashes.append(copy.deepcopy(new_splash))
 
-        child = Individual(splashes)
+
+        child = Individual(
+            splashes,
+            n=indiv.N,
+            current_min_radius=indiv.current_min_radius,
+            current_max_radius=indiv.current_max_radius,
+            generation=indiv.generation)
 
         return child
 
     """
     zmienia kolor, promień oraz położenie dwóm losowym plamkom 
     """
-    def mutate(self, child):
+    @staticmethod
+    def mutate(child):
         num_of_splashes = len(child.splash_parameters)
         i, j = np.random.randint(num_of_splashes), np.random.randint(num_of_splashes)
 
         child.splash_parameters[i].random_splash(Individual.LENGTH, Individual.WIDTH)
         child.splash_parameters[j].random_splash(Individual.LENGTH, Individual.WIDTH)
 
-    
     """
     zwraca populacje skladajaca sie z najlepszych osobnikow z pośród sumy zbiorów 'P' oraz 'children'
     """
-    def replace(self, P, children): 
+
+    @staticmethod
+    def replace(P, children):
         intitial_population_size = P.population_size
         children_population_size = children.population_size
 
@@ -201,13 +206,15 @@ class Utils:
         objective_values = [(P.population[i].objective_value, i) for i in range(len(P.population))]
         objective_values = sorted(objective_values, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
         
-        assert len(objective_values) == intitial_population_size+children_population_size, 'zgubiłem kogos lub dodalem za duzo'
+        assert len(objective_values) == intitial_population_size+children_population_size, \
+            'zgubiłem kogos lub dodalem za duzo'
         
         indexes_of_best_individuals = [objective_values[i][1] for i in range(P.population_size)]
         new_population = Population(P.population_size)
         for idx in indexes_of_best_individuals:
             new_population.append(P.population[idx])
         
-        assert len(new_population.population) == intitial_population_size, 'przy zastepowaniu dodałem złą liczbe osobnikow do nowej populacji !'
+        assert len(new_population.population) == intitial_population_size, \
+            'przy zastepowaniu dodałem złą liczbe osobnikow do nowej populacji !'
         
         return new_population
