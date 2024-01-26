@@ -21,7 +21,7 @@ class Evolution:
 
     # def __init__(self, num_of_generations=200, population_size=25, tournament_prob=0.9,
     #              cross_over_param=2, mutation_param=5):
-    def __init__(self, num_of_generations=1000, population_size=25):
+    def __init__(self, num_of_generations=20000, population_size=25):
         self.utils = Utils('GirlwithaPearl.jpg')
         self.population = None
         self.num_of_generations = num_of_generations
@@ -75,7 +75,7 @@ class Evolution:
                     self.no_difference_counter = 0
                     self.current_number_of_splashes += 1
             elif self.current_number_of_splashes < 150:
-                if self.no_difference_counter == 10:
+                if self.no_difference_counter == 8:
                     self.add_splash(self.population)
                     self.no_difference_counter = 0
                     self.current_number_of_splashes += 1
@@ -102,5 +102,5 @@ class Evolution:
 
     def add_splash(self, population):
         for individual in population.population:
-            individual.add_splash()
+            individual.add_splash(self.utils.objective_picture)
             individual.objective_value = self.utils.objective_function(individual)

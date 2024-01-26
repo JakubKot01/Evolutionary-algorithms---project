@@ -23,6 +23,7 @@ class Individual:
     """
 
     def __init__(self, splash_parameters=None, n=1, current_min_radius=0, current_max_radius=1, generation=None):
+        self.pixels_array_ranks = np.zeros((Individual.LENGTH, Individual.WIDTH, 1))
         if splash_parameters is None:
             splash_parameters = []
         self.splash_parameters = splash_parameters
@@ -48,7 +49,7 @@ class Individual:
         else:
             self.generation = generation
 
-    def generate_random_individual(self, n=4):
+    def generate_random_individual(self, objective_picture, n=4):
         splash_list = []
         self.N = n
         print(f'GeneratingIndividual: N = {self.N}')
@@ -58,8 +59,8 @@ class Individual:
             new_splash = Splash(
                 color=Splash.WHITE,
                 rank=i+1,
-                x=np.floor(Individual.WIDTH / 2),
-                y=np.floor(Individual.LENGTH / 2),
+                x=int(np.floor(Individual.WIDTH / 2)),
+                y=int(np.floor(Individual.LENGTH / 2)),
                 min_radius=self.current_min_radius,
                 max_radius=self.current_max_radius,
                 min_rank=1,
@@ -69,12 +70,11 @@ class Individual:
         print(f'Splash list: {splash_list}')
 
         for splash in splash_list:
-            splash.random_splash(Individual.WIDTH, Individual.LENGTH)
+            splash.random_splash(Individual.WIDTH, Individual.LENGTH, objective_picture)
 
         self.splash_parameters = splash_list
         print(f'Random list: {self.splash_parameters}')
         self.pixels_array = self.convert_to_pixels_array()
-        self.percentage_diff = 0
 
     """
     zwraca tablice z wartością koloru w kazdym pixelu obrazka 
@@ -82,54 +82,69 @@ class Individual:
 
     def convert_to_pixels_array(self):
 
-        # def outside_of_frame(pixel):
-        #     return ((pixel[0] < 0 or Individual.LENGTH <= pixel[0]) or
-        #            (pixel[1] < 0 or Individual.WIDTH <= pixel[1]))
-
-        # def outside_of_splash(pixel, x, y, r):
-        #    return (pixel[0] - x) ** 2 + (pixel[1] - y) ** 2 > r ** 2
-
-        # pixels_array = np.zeros((Individual.LENGTH, Individual.WIDTH, 3), dtype=np.uint64)
-        # pixels_array_ranks = np.zeros((Individual.LENGTH, Individual.WIDTH, 1))
-
-        # for splash in self.splash_parameters:
-        #    x, y = splash.x, splash.y
+        # splashes_rank_sorted = []
+        # for i in range(self.N):
+        #     splashes_rank_sorted.append((self.splash_parameters[i].rank, i))
         #
-        #     for t in range(int(-splash.r), int(splash.r) + 1):
-        #        for s in range(int(-splash.r), int(splash.r) + 1):
-        #
-        #            pixel = (int(x + t), int(y + s))
-        #            if outside_of_frame(pixel) or outside_of_splash(pixel, x, y, splash.r):
-        #                continue
-        #
-        #             if pixels_array_ranks[pixel[0]][pixel[1]] <= splash.rank:
-        #                 pixels_array[pixel[0]][pixel[1]] = splash.color
-        #                 pixels_array_ranks[pixel[0]][pixel[1]] = splash.rank
-        # return pixels_array
+        # splashes_rank_sorted = sorted(splashes_rank_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
 
         pixels_array = np.zeros((Individual.LENGTH, Individual.WIDTH, 3), dtype=np.uint64)
         pixels_array_ranks = np.zeros((Individual.LENGTH, Individual.WIDTH, 1))
-
-        splashes_rank_sorted = []
-        for i in range(self.N):
-            splashes_rank_sorted.append((self.splash_parameters[i].rank, i))
-
-        splashes_rank_sorted = sorted(splashes_rank_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
 
         def is_in_splash(splash, x, y):
             width= abs(splash.x - x)
             length = abs(splash.y - y)
             return width ** 2 + length ** 2 <= splash.r ** 2
 
-        print("splashes ranks:")
+        print("splashes ranks and transparencies:")
         for i in range(self.N):
-            splash = self.splash_parameters[splashes_rank_sorted[i][1]]
-            print(splash.rank, end='\t')
-            for y in range(Individual.LENGTH):
-                for x in range(Individual.WIDTH):
+            # splash = self.splash_parameters[splashes_rank_sorted[i][1]]
+            splash = self.splash_parameters[i]
+            radius = splash.r
+            left_border = max(splash.x - radius, 0)
+            right_border = min(splash.x + radius, Individual.WIDTH - 1)
+            top_border = max(splash.y - radius, 0)
+            bottom_border = min(splash.y + radius, Individual.LENGTH - 1)
+            t = splash.transparency
+            print(f'y: {type(splash.y)}, x: {type(splash.x)}, r: {type(splash.r)}, LENGTH: {type(Individual.LENGTH)}, WIDTH: {type(Individual.WIDTH)}')
+            # print(f'{splash.rank}, {t * 100}%', end='\t')
+            for y in range(top_border, bottom_border + 1):
+                for x in range(left_border, right_border + 1):
                     if is_in_splash(splash, x, y) and pixels_array_ranks[y][x] < splash.rank:
+                        # pixels_array[y][x] = np.floor(pixels_array[y][x] * (1 - t) + splash.color * t
                         pixels_array[y][x] = splash.color
-        print("\n")
+                        pixels_array_ranks[y][x] = splash.rank
+                    elif is_in_splash(splash, x, y) and pixels_array_ranks[y][x] == splash.rank:
+                        # pixels_array[y][x] = np.floor(0.5 * t * splash.color) + np.floor(0.5 * pixels_array[y][x])
+                        pixels_array[y][x] = int(np.floor(0.5 * splash.color)) + int(np.floor(0.5 * pixels_array[y][x]))
+                        pixels_array_ranks[y][x] = splash.rank
+        # print("\n")
+
+        # for i in range(self.N):
+        #     splash = self.splash_parameters[i]
+        #     radius = splash.r
+        #     left_border = np.maximum(splash.x - radius, 0)
+        #     right_border = np.minimum(splash.x + radius, Individual.WIDTH - 1)
+        #     top_border = np.maximum(splash.y - radius, 0)
+        #     bottom_border = np.minimum(splash.y + radius, Individual.LENGTH - 1)
+        #     t = splash.transparency
+        #     print(f'{splash.rank}, {t * 100}%', end='\t')
+#
+        #     # Create masks for pixel updates
+        #     in_splash_mask = is_in_splash(splash, np.arange(Individual.WIDTH)[:, None], np.arange(Individual.LENGTH)[None, :])
+        #     rank_condition = (in_splash_mask) & (pixels_array_ranks < splash.rank)[:, :, None]
+#
+        #     # Update pixels using vectorized operations
+        #     pixels_array[rank_condition] = splash.color
+        #     pixels_array_ranks[rank_condition] = splash.rank
+#
+        #     rank_condition_same_rank = (in_splash_mask) & (pixels_array_ranks == splash.rank)[:, :, None]
+        #     pixels_array[rank_condition_same_rank] = np.floor(0.5 * splash.color) + np.floor(0.5 * pixels_array[rank_condition_same_rank])
+        #     pixels_array_ranks[rank_condition_same_rank] = splash.rank
+#
+        # print("\n")
+
+        self.pixels_array_ranks = pixels_array_ranks
 
         return pixels_array
 
@@ -140,20 +155,20 @@ class Individual:
     def show_image(self):
         plt.imshow(self.pixels_array)
 
-    def add_splash(self):
+    def add_splash(self, objective_picture):
         self.current_largest_rank += 1
         element_of_group = self.current_largest_rank % 4
         if element_of_group == 0:
             min_rank = self.current_largest_rank + 1
             max_rank = self.current_largest_rank + 5
+            self.current_min_radius = int(np.floor(0.7 * self.current_max_radius))
+            self.current_max_radius = int(np.floor(0.9 * self.current_max_radius))
         else:
             min_rank = self.current_largest_rank - element_of_group + 1
             max_rank = self.current_largest_rank - element_of_group + 4
         self.generation += 1
-        self.current_min_radius = Individual.WIDTH / self.generation
         # self.N += 4
         self.N += 1
-        self.current_max_radius = int(np.floor(0.9 * self.current_max_radius))
         # for i in range(4):
         #     self.current_largest_rank += 1
         #     splash = Splash(
@@ -174,6 +189,6 @@ class Individual:
             max_radius=self.current_max_radius,
             min_rank=min_rank,
             max_rank=max_rank)
-        splash.random_splash(self.WIDTH, self.LENGTH)
+        splash.random_splash(self.WIDTH, self.LENGTH, objective_picture)
         self.splash_parameters.append(splash)
         self.pixels_array = self.convert_to_pixels_array()

@@ -50,17 +50,16 @@ class Utils:
         individual.percentage_diff /= number_of_pixels
         return result
 
-    @staticmethod
-    def create_initial_population(n):
+    def create_initial_population(self, n):
         population = Population()
         population.population_size = n
         for _ in range(population.population_size):
             individual = Individual(
                 None,
                 1,
-                np.floor(Individual.WIDTH / 4),
-                np.floor(Individual.WIDTH))
-            individual.generate_random_individual(n=1)
+                np.floor(Individual.WIDTH / 2),
+                np.floor(Individual.LENGTH / 2))
+            individual.generate_random_individual(self.objective_picture, n=1)
             population.append(individual)
         return population
 
@@ -75,6 +74,8 @@ class Utils:
     def parents_selection(P, number_of_parents):
         objective_values = np.array([x.objective_value for x in P.population])
         fitness_values = objective_values.max() - objective_values
+        if sum(fitness_values) != 1:
+            return np.where(objective_values == objective_values.max())[0]
         if fitness_values.sum() > 0:
             fitness_values = fitness_values / fitness_values.sum()
         else:
@@ -112,18 +113,14 @@ class Utils:
 
         print(f'number of splashes: {num_of_splashes}')
 
-        parameters = ['color', 'radius', 'coordinates', 'rank']
+        parameters = ['color', 'radius', 'coordinates', 'rank', 'transparency']
         random_parameter = np.random.choice(parameters)
 
         print(indiv.splash_parameters)
 
-        splashes_x_sorted = []
-        for i in range(num_of_splashes):
-            splashes_x_sorted.append((indiv.splash_parameters[i].x, i))
-
-        splashes_x_sorted = sorted(splashes_x_sorted, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
-
         splashes = list()
+
+        change_all_colors = True
 
         if random_parameter == 'color':
             # for i in range (num_of_splashes):
@@ -132,45 +129,61 @@ class Utils:
             #     splashes.append(new_splash)
 
             random_index = np.random.randint(0, num_of_splashes)
-            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
-            new_splash.modify_color(Individual.WIDTH, Individual.LENGTH, indiv, self)
+            new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
+            if change_all_colors:
+                new_splash.modify_all_colors(Individual.WIDTH, Individual.LENGTH, indiv, self)
+            else:
+                new_splash.modify_color(Individual.WIDTH, Individual.LENGTH, indiv, self)
 
             for i in range(0, num_of_splashes):
                 if i != random_index:
-                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[i]))
                 else:
                     splashes.append(copy.deepcopy(new_splash))
 
         elif random_parameter == 'radius':
             random_index = np.random.randint(0, num_of_splashes)
-            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
+            new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
             new_splash.modify_radius()
 
             for i in range(0, num_of_splashes):
                 if i != random_index:
-                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[i]))
                 else:
                     splashes.append(copy.deepcopy(new_splash))
         # elif random_parameter == 'rank':
         #     random_index = np.random.randint(0, num_of_splashes)
         #     new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
         #     new_splash.modify_rank()
-#
+        #
         #     for i in range(0, num_of_splashes):
         #         if i != random_index:
         #             splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
         #         else:
         #             splashes.append(copy.deepcopy(new_splash))
-        else:
+        elif random_parameter == 'coordinates':
             random_index = np.random.randint(0, num_of_splashes)
-            new_splash = copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[random_index][1]])
+            new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
             new_splash.modify_coordinates(Individual.WIDTH, Individual.LENGTH)
 
             for i in range(0, num_of_splashes):
                 if i != random_index:
-                    splashes.append(copy.deepcopy(indiv.splash_parameters[splashes_x_sorted[i][1]]))
+                    splashes.append(copy.deepcopy(indiv.splash_parameters[i]))
                 else:
                     splashes.append(copy.deepcopy(new_splash))
+        # elif random_parameter == 'transparency':
+        #     random_index = np.random.randint(0, num_of_splashes)
+        #     new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
+        #     new_splash.modify_transparency()
+        #
+        #     for i in range(0, num_of_splashes):
+        #         if i != random_index:
+        #             splashes.append(copy.deepcopy(indiv.splash_parameters[i]))
+        #         else:
+        #             splashes.append(copy.deepcopy(new_splash))
+        else:
+            for i in range(0, num_of_splashes):
+                splashes.append(copy.deepcopy(indiv.splash_parameters[i]))
 
 
         child = Individual(
@@ -185,13 +198,12 @@ class Utils:
     """
     zmienia kolor, promień oraz położenie dwóm losowym plamkom 
     """
-    @staticmethod
-    def mutate(child):
+    def mutate(self, child):
         num_of_splashes = len(child.splash_parameters)
         i, j = np.random.randint(num_of_splashes), np.random.randint(num_of_splashes)
 
-        child.splash_parameters[i].random_splash(Individual.LENGTH, Individual.WIDTH)
-        child.splash_parameters[j].random_splash(Individual.LENGTH, Individual.WIDTH)
+        child.splash_parameters[i].random_splash(Individual.LENGTH, Individual.WIDTH, self.objective_picture)
+        child.splash_parameters[j].random_splash(Individual.LENGTH, Individual.WIDTH, self.objective_picture)
 
     """
     zwraca populacje skladajaca sie z najlepszych osobnikow z pośród sumy zbiorów 'P' oraz 'children'
