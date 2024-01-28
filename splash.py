@@ -25,7 +25,7 @@ class Splash:
         self.min_radius = min_radius
         self.max_radius = max_radius
         self.r = int(1)
-        self.transparency = 100
+        self.transparency = int(100)
 
     def random_splash(self, x, y, objective_picture):
         # self.color = np.array([np.random.randint(0, 255) for _ in range(3)], dtype=np.uint64)
@@ -34,8 +34,8 @@ class Splash:
             self.x = np.random.randint(0, x)
         if self.y == 0:
             self.y = np.random.randint(0, y)
-        # self.transparency = np.random.randint(1, 100) / 100
-        self.transparency = int(1)
+        self.transparency = np.random.randint(50, 101)
+        # self.transparency = int(1)
         counter = 0
         red = 0
         green = 0
@@ -45,7 +45,7 @@ class Splash:
         left_border = max(self.x - self.r, 0)
         right_border = min(self.x + self.r + 1, x - 1)
 
-        print(f'self.y: {type(self.y)}, self.x: {type(self.x)}, self.r: {type(self.r)}, y: {type(y)}, x: {type(x)}')
+        # print(f'self.y: {type(self.y)}, self.x: {type(self.x)}, self.r: {type(self.r)}, y: {type(y)}, x: {type(x)}')
         for y in range(top_border, bottom_border):
             for x in range(left_border, right_border):
                 if self.count_distance(x, y, self.r):
@@ -179,7 +179,7 @@ class Splash:
         print(f'rank changed: new rank = {self.rank}')
 
     def modify_transparency(self):
-        self.transparency = np.random.randint(1, 100) / 100
+        self.transparency = np.random.randint(50, 101)
 
         print(f'transparency changed: new transparency = {self.transparency}%')
 

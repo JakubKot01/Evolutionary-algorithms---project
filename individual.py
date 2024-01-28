@@ -105,20 +105,28 @@ class Individual:
             right_border = min(splash.x + radius, Individual.WIDTH - 1)
             top_border = max(splash.y - radius, 0)
             bottom_border = min(splash.y + radius, Individual.LENGTH - 1)
-            t = splash.transparency
-            print(f'y: {type(splash.y)}, x: {type(splash.x)}, r: {type(splash.r)}, LENGTH: {type(Individual.LENGTH)}, WIDTH: {type(Individual.WIDTH)}')
-            # print(f'{splash.rank}, {t * 100}%', end='\t')
+            t = int(splash.transparency)
+            # print(f'y: {type(splash.y)}, x: {type(splash.x)}, r: {type(splash.r)}, t: {type(t)}, LENGTH: {type(Individual.LENGTH)}, WIDTH: {type(Individual.WIDTH)}')
+            print(f'{splash.rank}, {t}%', end='\t')
             for y in range(top_border, bottom_border + 1):
                 for x in range(left_border, right_border + 1):
-                    if is_in_splash(splash, x, y) and pixels_array_ranks[y][x] < splash.rank:
-                        # pixels_array[y][x] = np.floor(pixels_array[y][x] * (1 - t) + splash.color * t
-                        pixels_array[y][x] = splash.color
-                        pixels_array_ranks[y][x] = splash.rank
-                    elif is_in_splash(splash, x, y) and pixels_array_ranks[y][x] == splash.rank:
-                        # pixels_array[y][x] = np.floor(0.5 * t * splash.color) + np.floor(0.5 * pixels_array[y][x])
-                        pixels_array[y][x] = int(np.floor(0.5 * splash.color)) + int(np.floor(0.5 * pixels_array[y][x]))
-                        pixels_array_ranks[y][x] = splash.rank
-        # print("\n")
+                    if is_in_splash(splash, x, y) and pixels_array_ranks[y][x] <= splash.rank:
+                        for c in range(3):
+                            current_color = float(pixels_array[y][x][c])
+                            splash_color = float(splash.color[c])
+                            current_color = (current_color * (1 - t) / 100) + (splash_color * t / 100)
+                            pixels_array[y][x][c] = int(np.floor(current_color))
+                            # pixels_array[y][x] = splash.color
+                            # pixels_array_ranks[y][x] = splash.rank
+                    # elif is_in_splash(splash, x, y) and pixels_array_ranks[y][x] == splash.rank:
+                    #     for c in range(3):
+                    #         current_color = float(pixels_array[y][x][c])
+                    #         splash_color = float(splash.color[c])
+                    #         current_color = (splash_color * t * 0.5 / 100) + (current_color * t * 0.5 / 100)
+                    #         # pixels_array[y][x][c] = int(np.floor(0.5 * splash.color[c])) + int(np.floor(0.5 * pixels_array[y][x][c]))
+                        if t == 100:
+                            pixels_array_ranks[y][x] = t
+        print("\n")
 
         # for i in range(self.N):
         #     splash = self.splash_parameters[i]

@@ -85,6 +85,7 @@ class Evolution:
             self.population = self.utils.replace(self.population, children_population)
 
             # -------------------------------------------------------------------------
+            result_percentage = round(result_percentage, 2)
             print(
                 f'Generation nr: {cnt}, best objective value: '
                 f'{some_statistics[cnt]}, percentage_diff: {result_percentage}%')
