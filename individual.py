@@ -105,7 +105,7 @@ class Individual:
             right_border = min(splash.x + radius, Individual.WIDTH - 1)
             top_border = max(splash.y - radius, 0)
             bottom_border = min(splash.y + radius, Individual.LENGTH - 1)
-            t = int(splash.transparency)
+            t = splash.transparency
             # print(f'y: {type(splash.y)}, x: {type(splash.x)}, r: {type(splash.r)}, t: {type(t)}, LENGTH: {type(Individual.LENGTH)}, WIDTH: {type(Individual.WIDTH)}')
             print(f'{splash.rank}, {t}%', end='\t')
             for y in range(top_border, bottom_border + 1):
