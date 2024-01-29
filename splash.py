@@ -27,13 +27,13 @@ class Splash:
         self.r = int(1)
         self.transparency = int(100)
 
-    def random_splash(self, x, y, objective_picture):
+    def random_splash(self, x, y, objective_picture, low_y=0, low_x=0, high_y=1, high_x=1):
         # self.color = np.array([np.random.randint(0, 255) for _ in range(3)], dtype=np.uint64)
         self.r = np.random.randint(self.min_radius, max(self.max_radius,self.min_radius+1))
         if self.x == 0:
-            self.x = np.random.randint(0, x)
+            self.x = np.random.randint(low_x, high_x)
         if self.y == 0:
-            self.y = np.random.randint(0, y)
+            self.y = np.random.randint(low_y, high_y)
         self.transparency = np.random.randint(50, 101)
         # self.transparency = int(1)
         counter = 0

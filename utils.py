@@ -30,7 +30,10 @@ class Utils:
     def objective_function(self, individual):
         result = 0
         number_of_pixels = individual.WIDTH * individual.LENGTH
+        patch_width = individual.WIDTH // 5
+        patch_length = individual.LENGTH // 5
         individual.percentage_diff = 0
+        individual.patches_array = np.zeros((5, 5))
 
         for y in range(self.length):
             for x in range(self.width):
@@ -38,16 +41,18 @@ class Utils:
                 # print(f'x = {x}, y = {y}')
                 for c in range(3):
                     
-                    pixel_docelowy = int(self.objective_picture[y][x][c])
-                    pixel_aktualny = int(individual.pixels_array[y][x][c])
-                    difference = abs(pixel_aktualny - pixel_docelowy)
+                    target_pixel = int(self.objective_picture[y][x][c])
+                    current_pixel = int(individual.pixels_array[y][x][c])
+                    difference = abs(current_pixel - target_pixel)
                     difference = int(difference)
 
                     pixel_difference += (1 - (difference / 255))
+                    individual.patches_array[y // patch_length][x // patch_width] += difference ** 2
 
                     result += difference**2
                 individual.percentage_diff += pixel_difference / 3
         individual.percentage_diff /= number_of_pixels
+        print(f'Patches array: {individual.patches_array}')
         return result
 
     def create_initial_population(self, n):
@@ -74,6 +79,10 @@ class Utils:
     def parents_selection(P, number_of_parents):
         objective_values = np.array([x.objective_value for x in P.population])
         fitness_values = objective_values.max() - objective_values
+
+        if sum(fitness_values) != 1:
+            return np.where(objective_values == objective_values.max())[0]
+
         if fitness_values.sum() > 0:
             fitness_values = fitness_values / fitness_values.sum()
         else:
@@ -100,6 +109,7 @@ class Utils:
         for i in range(children.population_size):
             if np.random.random() < self.mutation_probability:
                 self.mutate(children.population[i])
+                print(f'Child mutated')
         
         """
         wylicz tablice pikseli oraz wartość funkcji celu każdego osbonika z populacji dzieci 

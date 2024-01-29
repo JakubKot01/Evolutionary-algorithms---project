@@ -32,6 +32,7 @@ class Individual:
         self.percentage_diff = 0
         self.N = n
         self.current_largest_rank = 1
+        self.patches_array = np.zeros((5, 5))
         if current_min_radius == 0:
             print(f'Min None?: {current_min_radius}')
             self.current_min_radius = Individual.WIDTH / self.N
@@ -114,10 +115,11 @@ class Individual:
                         for c in range(3):
                             current_color = float(pixels_array[y][x][c])
                             splash_color = float(splash.color[c])
-                            current_color = (current_color * (1 - t) / 100) + (splash_color * t / 100)
+                            current_color = (current_color * (100 - t) / 100) + (splash_color * t / 100)
                             pixels_array[y][x][c] = int(np.floor(current_color))
                             # pixels_array[y][x] = splash.color
                             # pixels_array_ranks[y][x] = splash.rank
+                        # print(f'new_color: {pixels_array[y][x]}', '\t')
                     # elif is_in_splash(splash, x, y) and pixels_array_ranks[y][x] == splash.rank:
                     #     for c in range(3):
                     #         current_color = float(pixels_array[y][x][c])
@@ -197,6 +199,14 @@ class Individual:
             max_radius=self.current_max_radius,
             min_rank=min_rank,
             max_rank=max_rank)
-        splash.random_splash(self.WIDTH, self.LENGTH, objective_picture)
+        max_indexes = np.unravel_index(np.argmax(self.pixels_array), self.pixels_array.shape)
+        splash.random_splash(
+            self.WIDTH,
+            self.LENGTH,
+            objective_picture,
+            low_y=max_indexes[0],
+            low_x=max_indexes[1],
+            high_y=max_indexes[0] + self.LENGTH // 5,
+            high_x=max_indexes[1] + self.WIDTH // 5)
         self.splash_parameters.append(splash)
         self.pixels_array = self.convert_to_pixels_array()
