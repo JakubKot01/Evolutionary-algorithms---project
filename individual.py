@@ -57,11 +57,16 @@ class Individual:
         for i in range(self.N):
             print(f'min radius = {self.current_min_radius}, max radius = {self.current_max_radius}')
             print(f'i = {i}', end='\t')
+            x_margin = Individual.WIDTH // 8
+            y_margin = Individual.LENGTH // 8
+
             new_splash = Splash(
                 color=Splash.WHITE,
                 rank=i+1,
-                x=int(np.floor(Individual.WIDTH / 2)),
-                y=int(np.floor(Individual.LENGTH / 2)),
+                x = np.random.randint(x_margin, Individual.WIDTH - x_margin),
+                y = np.random.randint(y_margin, Individual.WIDTH - y_margin),
+                # x=int(np.floor(Individual.WIDTH / 2)),
+                # y=int(np.floor(Individual.LENGTH / 2)),
                 min_radius=self.current_min_radius,
                 max_radius=self.current_max_radius,
                 min_rank=1,
@@ -171,11 +176,13 @@ class Individual:
         if element_of_group == 0:
             min_rank = self.current_largest_rank + 1
             max_rank = self.current_largest_rank + 5
-            self.current_min_radius = int(np.floor(0.7 * self.current_max_radius))
-            self.current_max_radius = int(np.floor(0.9 * self.current_max_radius))
         else:
             min_rank = self.current_largest_rank - element_of_group + 1
             max_rank = self.current_largest_rank - element_of_group + 4
+
+        if self.N % 10 == 0:
+            self.current_min_radius = int(np.floor(0.8 * self.current_max_radius))
+            self.current_max_radius = int(np.floor(0.9 * self.current_max_radius))
         self.generation += 1
         # self.N += 4
         self.N += 1

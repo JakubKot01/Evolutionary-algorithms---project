@@ -17,7 +17,7 @@ reload(population)
 
 
 class Evolution:
-    MAX_SPLASHES = 150
+    MAX_SPLASHES = 250
 
     # def __init__(self, num_of_generations=200, population_size=25, tournament_prob=0.9,
     #              cross_over_param=2, mutation_param=5):
@@ -70,12 +70,12 @@ class Evolution:
                 self.no_difference_counter = 0
                 self.current_number_of_splashes += 1
             if self.current_number_of_splashes < 10:
-                if self.no_difference_counter == 4:
+                if self.no_difference_counter == 2:
                     self.add_splash(self.population)
                     self.no_difference_counter = 0
                     self.current_number_of_splashes += 1
-            elif self.current_number_of_splashes < 150:
-                if self.no_difference_counter == 8:
+            elif self.current_number_of_splashes < 250:
+                if self.no_difference_counter == 4:
                     self.add_splash(self.population)
                     self.no_difference_counter = 0
                     self.current_number_of_splashes += 1

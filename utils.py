@@ -61,10 +61,10 @@ class Utils:
         for _ in range(population.population_size):
             individual = Individual(
                 None,
-                1,
-                np.floor(Individual.WIDTH / 2),
-                np.floor(Individual.LENGTH / 2))
-            individual.generate_random_individual(self.objective_picture, n=1)
+                4,
+                np.floor(Individual.WIDTH / 4),
+                np.floor(Individual.WIDTH / 4))
+            individual.generate_random_individual(self.objective_picture, n=4)
             population.append(individual)
         return population
 
@@ -154,7 +154,7 @@ class Utils:
         elif random_parameter == 'radius':
             random_index = np.random.randint(0, num_of_splashes)
             new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
-            new_splash.modify_radius()
+            new_splash.modify_radius(Individual.WIDTH, Individual.LENGTH, indiv, self)
 
             for i in range(0, num_of_splashes):
                 if i != random_index:
@@ -164,7 +164,7 @@ class Utils:
         elif random_parameter == 'rank':
             random_index = np.random.randint(0, num_of_splashes)
             new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
-            new_splash.modify_rank()
+            new_splash.modify_rank(Individual.WIDTH, Individual.LENGTH, indiv, self)
 
             for i in range(0, num_of_splashes):
                 if i != random_index:
@@ -174,7 +174,7 @@ class Utils:
         elif random_parameter == 'coordinates':
             random_index = np.random.randint(0, num_of_splashes)
             new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
-            new_splash.modify_coordinates(Individual.WIDTH, Individual.LENGTH)
+            new_splash.modify_coordinates(Individual.WIDTH, Individual.LENGTH, indiv, self)
 
             for i in range(0, num_of_splashes):
                 if i != random_index:
@@ -184,7 +184,7 @@ class Utils:
         elif random_parameter == 'transparency':
             random_index = np.random.randint(0, num_of_splashes)
             new_splash = copy.deepcopy(indiv.splash_parameters[random_index])
-            new_splash.modify_transparency()
+            new_splash.modify_transparency(Individual.WIDTH, Individual.LENGTH, indiv, self)
 
             for i in range(0, num_of_splashes):
                 if i != random_index:

@@ -34,7 +34,7 @@ class Splash:
             self.x = np.random.randint(low_x, high_x)
         if self.y == 0:
             self.y = np.random.randint(low_y, high_y)
-        self.transparency = np.random.randint(50, 101)
+        self.transparency = np.random.randint(20, 101)
         # self.transparency = int(1)
         counter = 0
         red = 0
@@ -167,25 +167,33 @@ class Splash:
 
         print(f'to {self.color[0]}, {self.color[1]}, {self.color[2]}')
 
-    def modify_radius(self):
+    def modify_radius(self, width, length, indiv, utils):
         random_radius_correction = np.random.randint(50, 200)
         self.r *= int(np.floor(random_radius_correction / 100))
 
         print(f'radius changed: new radius = {self.r}')
 
-    def modify_rank(self):
+        self.modify_all_colors(width, length, indiv, utils)
+
+    def modify_rank(self, width, length, indiv, utils):
         self.rank = np.random.randint(self.min_rank, self.max_rank)
 
         print(f'rank changed: new rank = {self.rank}')
 
-    def modify_transparency(self):
-        self.transparency = np.random.randint(50, 101)
+        self.modify_all_colors(width, length, indiv, utils)
+
+    def modify_transparency(self, width, length, indiv, utils):
+        self.transparency += np.random.randint(-20, 21)
+        if self.transparency < 20:
+            self.transparency = 20
 
         print(f'transparency changed: new transparency = {self.transparency}%')
 
-    def modify_coordinates(self, width, length):
-        random_x_correction = np.random.randint(-70, 70)
-        random_y_correction = np.random.randint(-70, 70)
+        self.modify_all_colors(width, length, indiv, utils)
+
+    def modify_coordinates(self, width, length, indiv, utils):
+        random_x_correction = np.random.randint(-self.r, self.r)
+        random_y_correction = np.random.randint(-self.r, self.r)
 
         test_new_x = self.x + random_x_correction
         test_new_y = self.y + random_y_correction
@@ -205,3 +213,5 @@ class Splash:
             self.y = test_new_y
 
         print(f'coordinates changed: x={self.x}, y={self.y}')
+
+        self.modify_all_colors(width, length, indiv, utils)
