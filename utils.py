@@ -27,6 +27,34 @@ class Utils:
     """
     compute RBG distance 
     """
+    # def objective_function(self, individual):
+    #     result = 0
+    #     number_of_pixels = individual.WIDTH * individual.LENGTH
+    #     patch_width = individual.WIDTH // 5
+    #     patch_length = individual.LENGTH // 5
+    #     individual.percentage_diff = 0
+    #     individual.patches_array = np.zeros((5, 5))
+#
+    #     for y in range(self.length):
+    #         for x in range(self.width):
+    #             pixel_difference = 0
+    #             # print(f'x = {x}, y = {y}')
+    #             for c in range(3):
+    #
+    #                 target_pixel = int(self.objective_picture[y][x][c])
+    #                 current_pixel = int(individual.pixels_array[y][x][c])
+    #                 difference = abs(current_pixel - target_pixel)
+    #                 difference = int(difference)
+#
+    #                 pixel_difference += (1 - (difference / 255))
+    #                 individual.patches_array[y // patch_length][x // patch_width] += difference ** 2
+#
+    #                 result += difference**2
+    #             individual.percentage_diff += pixel_difference / 3
+    #     individual.percentage_diff /= number_of_pixels
+    #     print(f'Patches array: {individual.patches_array}')
+    #     return result
+
     def objective_function(self, individual):
         result = 0
         number_of_pixels = individual.WIDTH * individual.LENGTH
@@ -35,23 +63,22 @@ class Utils:
         individual.percentage_diff = 0
         individual.patches_array = np.zeros((5, 5))
 
-        for y in range(self.length):
-            for x in range(self.width):
-                pixel_difference = 0
-                # print(f'x = {x}, y = {y}')
-                for c in range(3):
-                    
-                    target_pixel = int(self.objective_picture[y][x][c])
-                    current_pixel = int(individual.pixels_array[y][x][c])
-                    difference = abs(current_pixel - target_pixel)
-                    difference = int(difference)
+        for c in range(3):
+            target_pixels = self.objective_picture[:, :, c].astype(int)
+            current_pixels = individual.pixels_array[:, :, c].astype(int)
+            differences = np.abs(current_pixels - target_pixels)
 
-                    pixel_difference += (1 - (difference / 255))
-                    individual.patches_array[y // patch_length][x // patch_width] += difference ** 2
+            normalized_differences = differences / 255
+            pixel_difference_sum = np.sum(normalized_differences**2, axis=(0, 1))
 
-                    result += difference**2
-                individual.percentage_diff += pixel_difference / 3
-        individual.percentage_diff /= number_of_pixels
+            scale_factor = 255 ** 2
+
+            result += scale_factor * np.sum(normalized_differences**2)
+            individual.percentage_diff += (255 * number_of_pixels) - np.sum(pixel_difference_sum) / (number_of_pixels * 255)
+            individual.patches_array += scale_factor * pixel_difference_sum
+
+        individual.patches_array /= 3
+        individual.percentage_diff /= (3 * number_of_pixels)
         print(f'Patches array: {individual.patches_array}')
         return result
 
