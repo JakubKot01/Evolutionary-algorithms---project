@@ -225,7 +225,7 @@ class Utils:
 
         child = Individual(
             splashes,
-            n=indiv.N,
+            n=num_of_splashes,
             current_min_radius=indiv.current_min_radius,
             current_max_radius=indiv.current_max_radius,
             generation=indiv.generation)

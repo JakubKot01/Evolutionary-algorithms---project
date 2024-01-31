@@ -29,7 +29,7 @@ class Splash:
 
     def random_splash(self, x, y, objective_picture, low_y=0, low_x=0, high_y=1, high_x=1):
         # self.color = np.array([np.random.randint(0, 255) for _ in range(3)], dtype=np.uint64)
-        self.r = np.random.randint(self.min_radius, max(self.max_radius,self.min_radius+1))
+        self.r = np.random.randint(self.min_radius, max(self.max_radius, self.min_radius+1))
         if self.x == 0:
             self.x = np.random.randint(low_x, high_x)
         if self.y == 0:
@@ -171,6 +171,9 @@ class Splash:
         random_radius_correction = np.random.randint(50, 200)
         self.r *= int(np.floor(random_radius_correction / 100))
 
+        if self.r == 0:
+            self.r = 1
+
         print(f'radius changed: new radius = {self.r}')
 
         self.modify_all_colors(width, length, indiv, utils)
@@ -192,8 +195,12 @@ class Splash:
         self.modify_all_colors(width, length, indiv, utils)
 
     def modify_coordinates(self, width, length, indiv, utils):
-        random_x_correction = np.random.randint(-self.r, self.r)
-        random_y_correction = np.random.randint(-self.r, self.r)
+        if self.r != 0:
+            random_x_correction = np.random.randint(-self.r, self.r)
+            random_y_correction = np.random.randint(-self.r, self.r)
+        else:
+            random_x_correction = np.random.randint(-10, 10)
+            random_y_correction = np.random.randint(-10, 10)
 
         test_new_x = self.x + random_x_correction
         test_new_y = self.y + random_y_correction
