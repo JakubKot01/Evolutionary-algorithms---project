@@ -18,12 +18,10 @@ reload(population)
 
 class Evolution:
     MAX_SPLASHES = 250
+    ADDITIONAL_MAX_SPLASHES = 300
 
-    # def __init__(self, num_of_generations=200, population_size=25, tournament_prob=0.9,
-    #              cross_over_param=2, mutation_param=5):
+
     def __init__(self, num_of_generations=300000, population_size=25):
-        # self.utils = Utils('GirlWithaPearl.jpg')
-        # self.utils = Utils('MonaLisaFull.jpg')
         self.utils = Utils("MonaLisaFace.jpg")
         self.population = None
         self.num_of_generations = num_of_generations
@@ -44,7 +42,6 @@ class Evolution:
         self.population = self.utils.create_initial_population(self.population_size)
         self.utils.evaluate_population(self.population)
 
-        number_of_parents = self.population.population_size
         for t in range(self.num_of_generations):
             # -------------------------------------------------------------------------    
             some_statistics.append(min([x.objective_value for x in self.population.population]))
@@ -80,8 +77,14 @@ class Evolution:
                     self.add_splash(self.population)
                     self.no_difference_counter = 0
                     self.current_number_of_splashes += 1
+            elif result_percentage > 93 and self.current_number_of_splashes < self.ADDITIONAL_MAX_SPLASHES:
+                if self.no_difference_counter == 100:
+                    self.add_splash(self.population)
+                    self.no_difference_counter = 0
+                    self.current_number_of_splashes += 1
 
-            parent_index = self.utils.parents_selection(self.population, number_of_parents)
+
+            parent_index = self.utils.parents_selection(self.population)
             children_population = self.utils.create_children_population(self.population, parent_index)
             self.population = self.utils.replace(self.population, children_population)
 
@@ -93,9 +96,9 @@ class Evolution:
                     f'Generation nr: {cnt}, best objective value: '
                     f'{some_statistics[cnt]}, percentage_diff: {result_percentage}%')
 
-                # image_name = "GIRL_WITH_A_PEARL_LOGS/" + str(t + 1) + "__" + str(result_percentage) + "%" + ".png"
-                # image_name = "MONA_LISA_LOGS/" + str(t + 1) + "__" + str(result_percentage) + "%" + ".png"
-                image_name = "MONA_LISA_FACE_LOGS/" + str(t + 1) + "__" + str(result_percentage) + "%" + ".png"
+                image_name = ("MONA_LISA_FACE_LOGS/" + str(t + 1)
+                              + "_" + str(self.current_number_of_splashes)
+                              + "_" + str(result_percentage) + "%" + ".png")
                 img = self.population.population[0].pixels_array
                 RGB_img = np.flip(img, axis=-1)
                 cv2.imwrite(image_name, RGB_img)

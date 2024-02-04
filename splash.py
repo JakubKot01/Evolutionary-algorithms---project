@@ -29,14 +29,12 @@ class Splash:
 
 
     def random_splash(self, x, y, objective_picture, low_y=0, low_x=0, high_y=1, high_x=1):
-        # self.color = np.array([np.random.randint(0, 255) for _ in range(3)], dtype=np.uint64)
         self.r = np.random.randint(self.min_radius, max(self.max_radius, self.min_radius+1))
         if self.x == 0:
             self.x = np.random.randint(low_x, high_x)
         if self.y == 0:
             self.y = np.random.randint(low_y, high_y)
         self.transparency = np.random.randint(20, 101)
-        # self.transparency = int(1)
         counter = 0
         red = 0
         green = 0
@@ -46,7 +44,6 @@ class Splash:
         left_border = max(self.x - self.r, 0)
         right_border = min(self.x + self.r + 1, x - 1)
 
-        # print(f'self.y: {type(self.y)}, self.x: {type(self.x)}, self.r: {type(self.r)}, y: {type(y)}, x: {type(x)}')
         for y in range(top_border, bottom_border):
             for x in range(left_border, right_border):
                 if self.count_distance(x, y, self.r):
@@ -62,12 +59,6 @@ class Splash:
 
         if not np.array_equal(self.color, self.BLACK):
             self.color = [red, green, blue]
-
-        # red = np.random.randint(0, 256)
-        # green = np.random.randint(0, 256)
-        # blue = np.random.randint(0, 256)
-#
-        # self.color = [red, green, blue]
 
     def __str__(self):
         return f'<{self.color[0]}, {self.color[1]}, {self.color[2]}>'
@@ -85,9 +76,8 @@ class Splash:
         counter = 0
         for y in range(length):
             for x in range(width):
-                # if (self.count_distance(x, y, self.r)
-                #         and indiv.pixels_array_ranks[y][x] == self.rank):
-                if self.count_distance(x, y, self.r):
+                if (self.count_distance(x, y, self.r)
+                        and indiv.pixels_array_ranks[y][x] == self.rank):
                     counter += 1
                     red += int(utils.objective_picture[y][x][0]) - int(self.color[0])
                     green += int(utils.objective_picture[y][x][1]) - int(self.color[1])

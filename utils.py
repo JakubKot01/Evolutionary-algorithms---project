@@ -29,34 +29,6 @@ class Utils:
     compute RBG distance 
     """
 
-    # def objective_function(self, individual):
-    #     result = 0
-    #     number_of_pixels = individual.WIDTH * individual.LENGTH
-    #     patch_width = individual.WIDTH // 5
-    #     patch_length = individual.LENGTH // 5
-    #     individual.percentage_diff = 0
-    #     individual.patches_array = np.zeros((5, 5))
-    #
-    #     for y in range(self.length):
-    #         for x in range(self.width):
-    #             pixel_difference = 0
-    #             # print(f'x = {x}, y = {y}')
-    #             for c in range(3):
-    #
-    #                 target_pixel = int(self.objective_picture[y][x][c])
-    #                 current_pixel = int(individual.pixels_array[y][x][c])
-    #                 difference = abs(current_pixel - target_pixel)
-    #                 difference = int(difference)
-    #
-    #                 pixel_difference += (1 - (difference / 255))
-    #                 individual.patches_array[y // patch_length][x // patch_width] += difference ** 2
-    #
-    #                 result += difference**2
-    #             individual.percentage_diff += pixel_difference / 3
-    #     individual.percentage_diff /= number_of_pixels
-    #     print(f'Patches array: {individual.patches_array}')
-    #     return result
-
     def objective_function(self, individual):
         result = 0
         number_of_pixels = individual.WIDTH * individual.LENGTH
@@ -90,13 +62,9 @@ class Utils:
 
         individual.patches_array /= 3
 
-        # print(individual.patches_array)
-
         individual.percentage_diff /= (3 * number_of_pixels)
 
         result /= number_of_pixels
-        # print(f'Patches array: {individual.patches_array}')
-        # print(f'Percentage: {individual.percentage_diff}%')
 
         return result
 
@@ -122,22 +90,9 @@ class Utils:
     """
 
     @staticmethod
-    def parents_selection(P, number_of_parents):
+    def parents_selection(P):
         objective_values = np.array([x.objective_value for x in P.population])
         return np.where(objective_values == objective_values.max())[0]
-
-        # fitness_values = objective_values.max() - objective_values
-
-        # if fitness_values.sum() > 0:
-        #     fitness_values = fitness_values / fitness_values.sum()
-        # else:
-        #     fitness_values = np.ones(P.population_size) / P.population_size
-        #
-        # if sum(fitness_values) != 1:
-        #     return np.where(objective_values == objective_values.max())[0]
-        #
-        # parent_index = np.random.choice(P.population_size, number_of_parents, True, fitness_values).astype(np.int64)
-        # return parent_index
 
     """
     zwraca populację dzieci, każdy osobnik już zewaluowany 
@@ -147,10 +102,9 @@ class Utils:
         children = Population()
         children.population_size = parent_indexes.size
 
-        index = self.parents_selection(P, 1)[0]
+        index = self.parents_selection(P)[0]
 
         for i in range(parent_indexes.size):
-            # index = self.parents_selection(P, 1)[0]
             child = self.evaluate_individual(P.population[index])
             children.extend([child])
 
@@ -171,9 +125,7 @@ class Utils:
 
         num_of_splashes = indiv.N
 
-        # parameters = ['color', 'radius', 'coordinates', 'rank', 'transparency']
         parameters = ['color', 'radius', 'coordinates', 'transparency']
-        # parameters = ['color', 'radius', 'coordinates']
 
         random_parameter = np.random.choice(parameters)
 
