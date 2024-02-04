@@ -1,6 +1,6 @@
 from skimage import io
-import numpy as np 
-import copy 
+import numpy as np
+import copy
 from functools import cmp_to_key
 
 import splash
@@ -24,9 +24,11 @@ class Utils:
         print(self.objective_picture.shape)
         self.length, self.width, t = self.objective_picture.shape
         self.mutation_probability = mutation_probability
+
     """
     compute RBG distance 
     """
+
     # def objective_function(self, individual):
     #     result = 0
     #     number_of_pixels = individual.WIDTH * individual.LENGTH
@@ -34,7 +36,7 @@ class Utils:
     #     patch_length = individual.LENGTH // 5
     #     individual.percentage_diff = 0
     #     individual.patches_array = np.zeros((5, 5))
-#
+    #
     #     for y in range(self.length):
     #         for x in range(self.width):
     #             pixel_difference = 0
@@ -45,10 +47,10 @@ class Utils:
     #                 current_pixel = int(individual.pixels_array[y][x][c])
     #                 difference = abs(current_pixel - target_pixel)
     #                 difference = int(difference)
-#
+    #
     #                 pixel_difference += (1 - (difference / 255))
     #                 individual.patches_array[y // patch_length][x // patch_width] += difference ** 2
-#
+    #
     #                 result += difference**2
     #             individual.percentage_diff += pixel_difference / 3
     #     individual.percentage_diff /= number_of_pixels
@@ -58,8 +60,6 @@ class Utils:
     def objective_function(self, individual):
         result = 0
         number_of_pixels = individual.WIDTH * individual.LENGTH
-        patch_width = individual.WIDTH // 5
-        patch_length = individual.LENGTH // 5
         individual.percentage_diff = 0
         individual.patches_array = np.zeros((5, 5))
 
@@ -69,17 +69,35 @@ class Utils:
             differences = np.abs(current_pixels - target_pixels)
 
             normalized_differences = differences / 255
-            pixel_difference_sum = np.sum(normalized_differences**2, axis=(0, 1))
+            squares = np.square(normalized_differences)
+            squares_difference_sum = np.sum(squares, axis=(0, 1))
+            pixel_difference_sum = np.sum(normalized_differences, axis=(0, 1))
 
-            scale_factor = 255 ** 2
+            result += squares_difference_sum
+            individual.percentage_diff += number_of_pixels - np.sum(pixel_difference_sum)
 
-            result += scale_factor * np.sum(normalized_differences**2)
-            individual.percentage_diff += (255 * number_of_pixels) - np.sum(pixel_difference_sum) / (number_of_pixels * 255)
-            individual.patches_array += scale_factor * pixel_difference_sum
+        for i in range(1, 6):
+            for j in range(1, 6):
+                for c in range(3):
+                    start_length = (i - 1) * individual.LENGTH // 5
+                    end_length = i * individual.LENGTH // 5
+                    start_width = (j - 1) * individual.WIDTH // 5
+                    end_width = j * individual.WIDTH // 5
+                    target_pixels = self.objective_picture[start_length:end_length, start_width:end_width, c].astype(int)
+                    current_pixels = individual.pixels_array[start_length:end_length, start_width:end_width, c].astype(int)
+                    differences = np.abs(current_pixels - target_pixels)
+                    individual.patches_array[i - 1][j - 1] += np.sum(differences)
 
         individual.patches_array /= 3
+
+        # print(individual.patches_array)
+
         individual.percentage_diff /= (3 * number_of_pixels)
-        print(f'Patches array: {individual.patches_array}')
+
+        result /= number_of_pixels
+        # print(f'Patches array: {individual.patches_array}')
+        # print(f'Percentage: {individual.percentage_diff}%')
+
         return result
 
     def create_initial_population(self, n):
@@ -88,10 +106,10 @@ class Utils:
         for _ in range(population.population_size):
             individual = Individual(
                 None,
-                4,
-                np.floor(Individual.WIDTH / 4),
+                1,
+                np.floor(Individual.WIDTH / 8),
                 np.floor(Individual.WIDTH / 4))
-            individual.generate_random_individual(self.objective_picture, n=4)
+            individual.generate_random_individual(self.objective_picture, n=1)
             population.append(individual)
         return population
 
@@ -102,34 +120,37 @@ class Utils:
     """
     zwraca indeksy osobników wylosowanych na rodziców metodą ruletki 
     """
+
     @staticmethod
     def parents_selection(P, number_of_parents):
         objective_values = np.array([x.objective_value for x in P.population])
-        fitness_values = objective_values.max() - objective_values
+        return np.where(objective_values == objective_values.max())[0]
 
-        if sum(fitness_values) != 1:
-            return np.where(objective_values == objective_values.max())[0]
+        # fitness_values = objective_values.max() - objective_values
 
-        if fitness_values.sum() > 0:
-            fitness_values = fitness_values / fitness_values.sum()
-        else:
-            fitness_values = np.ones(P.population_size) / P.population_size
-
-        if sum(fitness_values) != 1:
-            return np.where(objective_values == objective_values.max())[0]
-
-        parent_index = np.random.choice(P.population_size, number_of_parents, True, fitness_values).astype(np.int64)
-        return parent_index
+        # if fitness_values.sum() > 0:
+        #     fitness_values = fitness_values / fitness_values.sum()
+        # else:
+        #     fitness_values = np.ones(P.population_size) / P.population_size
+        #
+        # if sum(fitness_values) != 1:
+        #     return np.where(objective_values == objective_values.max())[0]
+        #
+        # parent_index = np.random.choice(P.population_size, number_of_parents, True, fitness_values).astype(np.int64)
+        # return parent_index
 
     """
     zwraca populację dzieci, każdy osobnik już zewaluowany 
     """
+
     def create_children_population(self, P, parent_indexes):
         children = Population()
         children.population_size = parent_indexes.size
 
-        for i in range(0, parent_indexes.size):
-            index = self.parents_selection(P, 1)[0]
+        index = self.parents_selection(P, 1)[0]
+
+        for i in range(parent_indexes.size):
+            # index = self.parents_selection(P, 1)[0]
             child = self.evaluate_individual(P.population[index])
             children.extend([child])
 
@@ -137,7 +158,7 @@ class Utils:
             if np.random.random() < self.mutation_probability:
                 self.mutate(children.population[i])
                 print(f'Child mutated')
-        
+
         """
         wylicz tablice pikseli oraz wartość funkcji celu każdego osbonika z populacji dzieci 
         """
@@ -150,15 +171,11 @@ class Utils:
 
         num_of_splashes = indiv.N
 
-        print(f'number of splashes: {num_of_splashes}')
-
         # parameters = ['color', 'radius', 'coordinates', 'rank', 'transparency']
         parameters = ['color', 'radius', 'coordinates', 'transparency']
         # parameters = ['color', 'radius', 'coordinates']
 
         random_parameter = np.random.choice(parameters)
-
-        print(indiv.splash_parameters)
 
         splashes = list()
 
@@ -222,7 +239,6 @@ class Utils:
             for i in range(0, num_of_splashes):
                 splashes.append(copy.deepcopy(indiv.splash_parameters[i]))
 
-
         child = Individual(
             splashes,
             n=num_of_splashes,
@@ -235,6 +251,7 @@ class Utils:
     """
     zmienia kolor, promień oraz położenie dwóm losowym plamkom 
     """
+
     def mutate(self, child):
         num_of_splashes = len(child.splash_parameters)
         i, j = np.random.randint(num_of_splashes), np.random.randint(num_of_splashes)
@@ -254,16 +271,16 @@ class Utils:
         P.extend(children)
         objective_values = [(P.population[i].objective_value, i) for i in range(len(P.population))]
         objective_values = sorted(objective_values, key=cmp_to_key(lambda item1, item2: item1[0] - item2[0]))
-        
-        assert len(objective_values) == intitial_population_size+children_population_size, \
+
+        assert len(objective_values) == intitial_population_size + children_population_size, \
             'zgubiłem kogos lub dodalem za duzo'
-        
+
         indexes_of_best_individuals = [objective_values[i][1] for i in range(P.population_size)]
         new_population = Population(P.population_size)
         for idx in indexes_of_best_individuals:
             new_population.append(P.population[idx])
-        
+
         assert len(new_population.population) == intitial_population_size, \
             'przy zastepowaniu dodałem złą liczbe osobnikow do nowej populacji !'
-        
+
         return new_population

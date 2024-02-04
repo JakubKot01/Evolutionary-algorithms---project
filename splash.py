@@ -27,6 +27,7 @@ class Splash:
         self.r = int(1)
         self.transparency = int(100)
 
+
     def random_splash(self, x, y, objective_picture, low_y=0, low_x=0, high_y=1, high_x=1):
         # self.color = np.array([np.random.randint(0, 255) for _ in range(3)], dtype=np.uint64)
         self.r = np.random.randint(self.min_radius, max(self.max_radius, self.min_radius+1))
@@ -59,7 +60,14 @@ class Splash:
             green = int(np.floor(green / counter))
             blue = int(np.floor(blue / counter))
 
-        self.color = [red, green, blue]
+        if not np.array_equal(self.color, self.BLACK):
+            self.color = [red, green, blue]
+
+        # red = np.random.randint(0, 256)
+        # green = np.random.randint(0, 256)
+        # blue = np.random.randint(0, 256)
+#
+        # self.color = [red, green, blue]
 
     def __str__(self):
         return f'<{self.color[0]}, {self.color[1]}, {self.color[2]}>'
@@ -77,8 +85,9 @@ class Splash:
         counter = 0
         for y in range(length):
             for x in range(width):
-                if (self.count_distance(x, y, self.r)
-                        and indiv.pixels_array_ranks[y][x] == self.rank):
+                # if (self.count_distance(x, y, self.r)
+                #         and indiv.pixels_array_ranks[y][x] == self.rank):
+                if self.count_distance(x, y, self.r):
                     counter += 1
                     red += int(utils.objective_picture[y][x][0]) - int(self.color[0])
                     green += int(utils.objective_picture[y][x][1]) - int(self.color[1])
@@ -131,7 +140,7 @@ class Splash:
                     green += int(utils.objective_picture[y][x][1]) - int(self.color[1])
                     blue += int(utils.objective_picture[y][x][2]) - int(self.color[2])
 
-        print(f'updated all colors from {self.color[0]}, {self.color[1]}, {self.color[2]}', end='')
+        print(f'updated all colors from {self.color[0]}, {self.color[1]}, {self.color[2]}', end=' ')
 
         if counter != 0:
             red = int(np.floor(red / counter))
@@ -144,7 +153,6 @@ class Splash:
         else:
             random_change = np.random.randint(0, red)
             new_value = min(255, int(self.color[0]) + random_change)
-        print(f'updated red from {self.color[0]} to {new_value}')
         self.color[0] = new_value
 
         if green <= 0:
@@ -153,7 +161,6 @@ class Splash:
         else:
             random_change = np.random.randint(0, green)
             new_value = min(255, int(self.color[1]) + random_change)
-        print(f'updated green from {self.color[1]} to {new_value}')
         self.color[1] = new_value
 
         if blue <= 0:
@@ -162,14 +169,14 @@ class Splash:
         else:
             random_change = np.random.randint(0, blue)
             new_value = min(255, int(self.color[2]) + random_change)
-        print(f'updated blue from {self.color[2]} to {new_value}')
         self.color[2] = new_value
 
         print(f'to {self.color[0]}, {self.color[1]}, {self.color[2]}')
 
     def modify_radius(self, width, length, indiv, utils):
         random_radius_correction = np.random.randint(50, 200)
-        self.r *= int(np.floor(random_radius_correction / 100))
+        new_radius = float(self.r) * random_radius_correction / 100
+        self.r = int(np.floor(new_radius))
 
         if self.r == 0:
             self.r = 1

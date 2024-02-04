@@ -16,7 +16,11 @@ class Individual:
     N             - liczba plam
     """
     # LENGTH, WIDTH = 720, 483      # Mona Lisa
-    LENGTH, WIDTH = 480, 405  # Girl with a pearl
+    # LENGTH, WIDTH = 480, 405      # Girl with a pearl
+    # LENGTH, WIDTH = 240, 161        # Small Mona Lisa
+    # LENGTH, WIDTH = 142, 161        # Cut Mona
+    # LENGTH, WIDTH = 400, 400        # Mona Lisa Face
+    LENGTH, WIDTH = 200, 200        # Mona Lisa Face compressed
 
     """
     splash_parameters - tablica z parametrami kolejnych plam (kolorem, rangą, położeniem)
@@ -34,13 +38,11 @@ class Individual:
         self.current_largest_rank = 1
         self.patches_array = np.zeros((5, 5))
         if current_min_radius == 0:
-            print(f'Min None?: {current_min_radius}')
             self.current_min_radius = Individual.WIDTH / self.N
         else:
             self.current_min_radius = current_min_radius
 
         if current_max_radius == 1:
-            print(f'Max None?: {current_max_radius}')
             self.current_max_radius = Individual.WIDTH
         else:
             self.current_max_radius = current_max_radius
@@ -53,33 +55,42 @@ class Individual:
     def generate_random_individual(self, objective_picture, n=4):
         splash_list = []
         self.N = n
-        print(f'GeneratingIndividual: N = {self.N}')
-        for i in range(self.N):
-            print(f'min radius = {self.current_min_radius}, max radius = {self.current_max_radius}')
-            print(f'i = {i}', end='\t')
-            x_margin = Individual.WIDTH // 8
-            y_margin = Individual.LENGTH // 8
-
+        # print(f'GeneratingIndividual: N = {self.N}')
+        if self.N == 1:
             new_splash = Splash(
-                color=Splash.WHITE,
-                rank=i+1,
-                x = np.random.randint(x_margin, Individual.WIDTH - x_margin),
-                y = np.random.randint(y_margin, Individual.WIDTH - y_margin),
-                # x=int(np.floor(Individual.WIDTH / 2)),
-                # y=int(np.floor(Individual.LENGTH / 2)),
-                min_radius=self.current_min_radius,
-                max_radius=self.current_max_radius,
+                color=Splash.BLACK,
+                rank=1,
+                x=int(np.floor(Individual.WIDTH / 2)),
+                y=int(np.floor(Individual.LENGTH / 2)),
+                min_radius=self.WIDTH // 2,
+                max_radius=self.WIDTH // 2,
                 min_rank=1,
-                max_rank=4)
-            print(f'New splash: {new_splash}')
+                max_rank=2)
             splash_list.append(new_splash)
-        print(f'Splash list: {splash_list}')
+
+        else:
+            for i in range(self.N):
+                x_margin = Individual.WIDTH // 8
+                y_margin = Individual.LENGTH // 8
+
+                new_splash = Splash(
+                    color=Splash.WHITE,
+                    rank=i+1,
+                    x=np.random.randint(x_margin, Individual.WIDTH - x_margin),
+                    y=np.random.randint(y_margin, Individual.WIDTH - y_margin),
+                    # x=int(np.floor(Individual.WIDTH / 2)),
+                    # y=int(np.floor(Individual.LENGTH / 2)),
+                    min_radius=self.current_min_radius,
+                    max_radius=self.current_max_radius,
+                    min_rank=1,
+                    max_rank=4)
+                splash_list.append(new_splash)
+        # print(f'Splash list: {splash_list}')
 
         for splash in splash_list:
             splash.random_splash(Individual.WIDTH, Individual.LENGTH, objective_picture)
 
         self.splash_parameters = splash_list
-        print(f'Random list: {self.splash_parameters}')
         self.pixels_array = self.convert_to_pixels_array()
 
     """
@@ -166,6 +177,8 @@ class Individual:
 
             if t == 100:
                 pixels_array_ranks[splash_mask] = t
+            # pixels_array_ranks[splash_mask] = t
+
 
         self.pixels_array_ranks = pixels_array_ranks
         return pixels_array
@@ -187,8 +200,8 @@ class Individual:
             max_rank = self.current_largest_rank - element_of_group + 4
 
         if self.N % 10 == 0:
-            self.current_min_radius = int(np.floor(0.8 * self.current_max_radius))
-            self.current_max_radius = int(np.floor(0.9 * self.current_max_radius))
+            self.current_min_radius = int(np.floor(0.8 * self.current_min_radius))
+            self.current_max_radius = int(np.floor(0.95 * self.current_max_radius))
         self.generation += 1
         # self.N += 4
         self.N += 1
@@ -212,14 +225,21 @@ class Individual:
             max_radius=self.current_max_radius,
             min_rank=min_rank,
             max_rank=max_rank)
-        max_indexes = np.unravel_index(np.argmax(self.pixels_array), self.pixels_array.shape)
+        max_indexes = np.unravel_index(np.argmax(self.patches_array), self.patches_array.shape)
+
+        patch_length = self.LENGTH //5
+        patch_width = self.WIDTH // 5
+        low_y = max_indexes[0] * patch_length
+        low_x = max_indexes[1] * patch_width
+        high_y = max_indexes[0] * patch_length + patch_length
+        high_x = max_indexes[1] * patch_width + patch_width
         splash.random_splash(
             self.WIDTH,
             self.LENGTH,
             objective_picture,
-            low_y=max_indexes[0],
-            low_x=max_indexes[1],
-            high_y=max_indexes[0] + self.LENGTH // 5,
-            high_x=max_indexes[1] + self.WIDTH // 5)
+            low_y=low_y,
+            low_x=low_x,
+            high_y=high_y,
+            high_x=high_x)
         self.splash_parameters.append(splash)
         self.pixels_array = self.convert_to_pixels_array()
