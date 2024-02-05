@@ -1,3 +1,3 @@
 # Evolutionary-algorithms---project
 
-![Wizualizacja działania algorytmu](result.gif)
+![Wizualizacja działania algorytmu](attachments/result.gif)

@@ -22,7 +22,7 @@ class Evolution:
 
 
     def __init__(self, num_of_generations=300000, population_size=25):
-        self.utils = Utils("MonaLisaFace.jpg")
+        self.utils = Utils("attachments/Mona_Lisa_compressed.jpg")
         self.population = None
         self.num_of_generations = num_of_generations
         self.best_of_generations = []
@@ -90,13 +90,13 @@ class Evolution:
 
             # -------------------------------------------------------------------------
 
-            if cnt % 25 == 0:
+            if cnt % 50 == 0:
                 result_percentage = round(result_percentage, 2)
                 print(
                     f'Generation nr: {cnt}, best objective value: '
                     f'{some_statistics[cnt]}, percentage_diff: {result_percentage}%')
 
-                image_name = ("MONA_LISA_FACE_LOGS/" + str(t + 1)
+                image_name = ("LOGS/" + str(t + 1)
                               + "_" + str(self.current_number_of_splashes)
                               + "_" + str(result_percentage) + "%" + ".png")
                 img = self.population.population[0].pixels_array
