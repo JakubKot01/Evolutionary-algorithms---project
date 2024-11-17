@@ -9,5 +9,6 @@ using a limited number of circles, modifying its' parameters:
 - size
 - transparency
 
-Example of program result - reconstruction of the Mona Lisa
+Example of program result - reconstruction of the Mona Lisa:
+
 ![Wizualizacja działania algorytmu](attachments/result.gif)
